@@ -40,6 +40,13 @@ const styles = {
     fontSize: '24px',
     fontWeight: 'bold',
   },
+  mapWrapper: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '80%',
+  }
 };
 
 export default App;
