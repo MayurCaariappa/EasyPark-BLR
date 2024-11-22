@@ -31,7 +31,7 @@ function MapContainer({ setLoading, setError }) {
 
   const fetchParkingSpots = async (maplibre) => {
     try {
-      const response = await fetch('http://localhost:3000/api/v1/parking-spots');
+      const response = await fetch('https://easypark-blr.onrender.com/api/v1/parking-spots');
       if (!response.ok) throw new Error('Failed to fetch parking spots');
       
       const data = await response.json();
