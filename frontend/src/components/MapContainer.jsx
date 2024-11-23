@@ -39,7 +39,7 @@ function MapContainer({ setLoading, setError }) {
         width="24"
         height="24"
         viewBox="0 0 24 24"
-        fill="#3B82F6"
+        fill="none"
         style="cursor: pointer"
       >
         <circle cx="12" cy="12" r="12" fill="#3B82F6" />
@@ -62,14 +62,13 @@ function MapContainer({ setLoading, setError }) {
   const createEVMarker = () => {
     const el = document.createElement('div');
     el.className = 'marker ev-marker';
-
-    // Create an img element for the bolt icon
+  
     const img = document.createElement('img');
     img.src = boltIcon;
     img.style.width = '24px';
     img.style.height = '24px';
     img.style.cursor = 'pointer';
-
+  
     el.appendChild(img);
     return el;
   };
@@ -81,7 +80,7 @@ function MapContainer({ setLoading, setError }) {
       // const parkingResponse  = await fetch('http://localhost:3000/api/v1/parking-spots');
       if (!parkingResponse .ok) throw new Error('Failed to fetch parking spots');
 
-      const parkingData = await parkingResponse .json();
+      const parkingData = await parkingResponse.json();
       const { parkingSpots = [] } = parkingData;
 
       // Fetch EV charging stations
@@ -105,7 +104,7 @@ function MapContainer({ setLoading, setError }) {
               <p>Location: ${spot.lat.toFixed(4)}, ${spot.lon.toFixed(4)}</p>
               ${spot.tags?.capacity ? `<p>Capacity: ${spot.tags.capacity}</p>` : ''}
               ${spot.tags?.parking ? `<p>Parking: ${spot.tags.parking}</p>` : ''}`);
-
+  
             new maplibre.Marker(el)
               .setLngLat([spot.lon, spot.lat])
               .setPopup(popup)
@@ -118,18 +117,15 @@ function MapContainer({ setLoading, setError }) {
       if (Array.isArray(evChargingStations)) {
         evChargingStations.forEach((station) => {
           if (station.type === 'node' && station.lat && station.lon) {
-            const el = createEVMarker();
-
-            const chargingName = station.tags?.name || station.tags?.addr || 'EV Charging';
-
-            const popup = new maplibre.Popup({ offset: 25 }).setHTML(`
-              <h3>${chargingName}</h3>
-              <p>Location: ${station.lat.toFixed(4)}, ${station.lon.toFixed(4)}</p>
-              ${station.tags?.parking ? `<p>Parking: ${station.tags.parking}</p>` : ''}`);
-
-            new maplibre.Marker(el)
+            new maplibre.Marker({ color: '#10B981', scale: 1 })
               .setLngLat([station.lon, station.lat])
-              .setPopup(popup)
+              .setPopup(
+                new maplibre.Popup({ offset: 25 }).setHTML(`
+                  <h3>${station.tags?.name || 'EV Charging Station'}</h3>
+                  <p>Location: ${station.lat.toFixed(4)}, ${station.lon.toFixed(4)}</p>
+                  ${station.tags?.parking ? `<p>Parking: ${station.tags.parking}</p>` : ''}
+                `)
+              )
               .addTo(map.current);
           }
         });
