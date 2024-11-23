@@ -19,7 +19,7 @@ function MapContainer({ setLoading, setError }) {
 
       map.current.addControl(new maplibre.NavigationControl());
       map.current.on('load', () => {
-        fetchParkingSpots(maplibre);
+        fetchParkingSpotsAndChargingStations(maplibre);
       });
     });
 
@@ -62,32 +62,38 @@ function MapContainer({ setLoading, setError }) {
   const createEVMarker = () => {
     const el = document.createElement('div');
     el.className = 'marker ev-marker';
-    
+
     // Create an img element for the bolt icon
     const img = document.createElement('img');
     img.src = boltIcon;
     img.style.width = '24px';
     img.style.height = '24px';
     img.style.cursor = 'pointer';
-    
+
     el.appendChild(img);
     return el;
   };
 
-  const fetchParkingSpots = async (maplibre) => {
+  const fetchParkingSpotsAndChargingStations = async (maplibre) => {
     try {
-      const response = await fetch('https://easypark-blr.onrender.com/api/v1/parking-spots');
-      // const response = await fetch('http://localhost:3000/api/v1/parking-spots');
-      if (!response.ok) throw new Error('Failed to fetch parking spots');
+      // Fetch parking spots
+      const parkingResponse = await fetch('https://easypark-blr.onrender.com/api/v1/parking-spots');
+      // const parkingResponse  = await fetch('http://localhost:3000/api/v1/parking-spots');
+      if (!parkingResponse .ok) throw new Error('Failed to fetch parking spots');
 
-      const data = await response.json();
-      const { parkingSpots = [], evChargingStations = [] } = data;
+      const parkingData = await parkingResponse .json();
+      const { parkingSpots = [] } = parkingData;
 
-      console.log('Parking spots:', parkingSpots.length);
-      console.log('EV stations:', evChargingStations.length);
+      // Fetch EV charging stations
+      const chargingResponse = await fetch('https://easypark-blr.onrender.com/api/v1/charging-stations');
+      // const chargingResponse = await fetch('http://localhost:3000/api/v1/charging-stations');
+      if (!chargingResponse.ok) throw new Error('Failed to fetch EV charging stations');
+
+      const chargingData = await chargingResponse.json();
+      const { parkingSpots: evChargingStations = [] } = chargingData;
 
       // parking spots markers
-      if (parkingSpots && Array.isArray(parkingSpots)) {
+      if (Array.isArray(parkingSpots)) {
         parkingSpots.forEach((spot) => {
           if (spot.type === 'node' && spot.lat && spot.lon) {
             const el = createParkingMarker();
@@ -109,18 +115,23 @@ function MapContainer({ setLoading, setError }) {
       }
 
       // EV charging station
-      if (evChargingStations && Array.isArray(evChargingStations)) {
+      if (Array.isArray(evChargingStations)) {
         evChargingStations.forEach((station) => {
-          const el = createEVMarker();
+          if (station.type === 'node' && station.lat && station.lon) {
+            const el = createEVMarker();
 
-          const popup = new maplibre.Popup({ offset: 25 }).setHTML(`
-            <h3>EV Charging Station</h3>
-            <p>Location: ${station.lat.toFixed(4)}, ${station.lon.toFixed(4)}</p>`);
+            const chargingName = station.tags?.name || station.tags?.addr || 'EV Charging';
 
-          new maplibre.Marker(el)
-            .setLngLat([station.lon, station.lat])
-            .setPopup(popup)
-            .addTo(map.current);
+            const popup = new maplibre.Popup({ offset: 25 }).setHTML(`
+              <h3>${chargingName}</h3>
+              <p>Location: ${station.lat.toFixed(4)}, ${station.lon.toFixed(4)}</p>
+              ${station.tags?.parking ? `<p>Parking: ${station.tags.parking}</p>` : ''}`);
+
+            new maplibre.Marker(el)
+              .setLngLat([station.lon, station.lat])
+              .setPopup(popup)
+              .addTo(map.current);
+          }
         });
       }
 
@@ -168,7 +179,7 @@ const styles = {
     display: 'block',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
   },
-  
+
   legendContainer: {
     position: 'absolute',
     top: '10px',
