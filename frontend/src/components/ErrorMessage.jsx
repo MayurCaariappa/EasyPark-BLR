@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 
 function ErrorMessage({ message }) {
   return (
@@ -19,6 +19,10 @@ const styles = {
     borderRadius: '8px',
     zIndex: 1000,
   }
+};
+
+ErrorMessage.propTypes = {
+  message: PropTypes.func.isRequired
 };
 
 export default ErrorMessage;
